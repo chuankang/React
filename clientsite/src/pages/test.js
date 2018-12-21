@@ -1,98 +1,150 @@
-import React, { Component } from 'react';
-
+/**
+ * Created by zhengzehao on 2017/10/18.
+ */
+import React, {Component} from 'react'
 class Test extends Component {
-  render() {
-    return (
-      <div>
-            <SearchBar/>
-            <ProductTable products={PRODUCTS}/>
-        </div>
-    );
-  }
+    constructor(props) {
+        super(props)
+        this.state = {
+            filterText: '',
+            inStockOnly: false
+        };
+        this.handleFilterTextChange = this.handleFilterTextChange.bind(this);
+        this.handleInStockChange = this.handleInStockChange.bind(this);
+    }
+    handleFilterTextChange(filterText){
+        this.setState({
+            filterText: filterText
+        });
+    }
+
+    handleInStockChange(inStockOnly){
+        this.setState({
+            inStockOnly: inStockOnly
+        })
+    }
+    render() {
+        return (<div>
+            <SearchBar filterText={this.state.filterText} inStockOnly={this.state.inStockOnly}
+                       onFilterTextChange={this.handleFilterTextChange}
+                       onInStockChange={this.handleInStockChange}/>
+            <ProductTable products={PRODUCTS}
+                          filterText={this.state.filterText}
+                          inStockOnly={this.state.inStockOnly}/>
+        </div>)
+    }
 }
 
 class SearchBar extends Component {
-  render() {
-      return (
-      <div>
-        <input type="text" placeholder="Search"/>
-        <p>
-            <input type="checkbox"/>{''}Only show products in stock
-        </p>
-       </div>
-    )
-  }
+    constructor(props) {
+        super(props);
+        this.handleFilterTextChange = this.handleFilterTextChange.bind(this);
+        this.handleInStockChange = this.handleInStockChange.bind(this);
+    }
+
+    handleFilterTextChange(e) {
+        this.props.onFilterTextChange(e.target.value);
+    }
+
+    handleInStockChange(e) {
+        this.props.onInStockChange(e.target.checked);
+    }
+
+    render() {
+        const filterText = this.props.filterText;
+        const inStockOnly = this.props.inStockOnly;
+        return (
+            <div>
+                <input type="text" placeholder="Search" value={filterText}  onChange={this.handleFilterTextChange}/>
+                <p>
+                    <input type="checkbox" checked={inStockOnly} onChange={this.handleInStockChange}/>{''}Only show products in stock
+                </p>
+            </div>
+        )
+    }
 }
 
-class ProductTable extends Component {
-  render() {
-    const rows = [];
-    let lastCategory = null;
-    this.props.products.forEach((product) => {
-        //要清楚我们需要的结构rows = [<Category1/>,<Row1/>,<Row2/>,<Category2/>,<Row3/>,</Row4/>]
-        if (product.category !== lastCategory) {
+
+class ProductTable extends React.Component {
+    render() {
+        const filterText = this.props.filterText;
+        const inStockOnly = this.props.inStockOnly;
+
+        const rows = [];
+        let lastCategory = null;
+        this.props.products.forEach((product) => {
+
+            // new
+            if (product.name.indexOf(filterText) === -1) {
+                return;
+            }
+            if (inStockOnly && !product.stocked) {
+                return;
+            }
+
+            if (product.category !== lastCategory) {
+                rows.push(
+                    <ProductCategoryRow
+                        category={product.category}
+                        key={product.category}/>
+                );
+            }
             rows.push(
-                <ProductCategoryRow
-                    category={product.category}
-                    key={product.category}/>
+                <ProductRow
+                    product={product}
+                    key={product.name}/>
             );
-        }
-        rows.push(
-            <ProductRow
-                product={product}
-                key={product.name}/>
+            lastCategory = product.category;
+        });
+        return (
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                </tr>
+                </thead>
+                <tbody>{rows}</tbody>
+            </table>
         );
-        lastCategory = product.category;
-    });
-    return (
-        <table>
-            <thead>
-            <tr>
-                <th>产品</th>
-                <th>价格</th>
-            </tr>
-            </thead>
-            <tbody>{rows}</tbody>
-        </table>
-    );
-  }
+    }
 }
+
 
 class ProductCategoryRow extends Component {
-  render() {
-    var category = this.props.category;
-    return (<tr>
-        <th cols={2}>{category}
-        </th>
-    </tr>)
-  }
+    render() {
+        var category = this.props.category;
+        return (
+        <tr>
+            <th cols={2}>{category}</th>
+        </tr>)
+    }
 }
 
-class ProductRow extends Component {
-  render() {
-    const product = this.props.product;
-    const name = product.stocked ?
-        product.name :
-        <span style={{color: 'red'}}>
-            {product.name}
-        </span>;
-    // 如果是stocked就直接输出，否则用span包裹并设置style的color为red
-    return (
-        <tr>
-            <td>{name}</td>
-            <td>{product.price}</td>
-        </tr>
-    );
-  }
+class ProductRow extends React.Component {
+    render() {
+        const product = this.props.product;
+        const name = product.stocked ?
+            product.name :
+            <span style={{color: 'red'}}>
+                {product.name}
+            </span>;
+        // 如果是stocked就直接输出，否则用span包裹并设置style的color为red
+        return (
+            <tr>
+                <td>{name}</td>
+                <td>{product.price}</td>
+            </tr>
+        );
+    }
 }
 
 const PRODUCTS = [
-  {category: '运动商品', price: '$49.99', stocked: true, name: '足球'},
-  {category: '运动商品', price: '$9.99', stocked: true, name: '棒球'},
-  {category: '运动商品', price: '$29.99', stocked: false, name: '篮球'},
-  {category: '电子产品', price: '$99.99', stocked: true, name: 'OPPO R10'},
-  {category: '电子产品', price: '$399.99', stocked: false, name: 'iPhone 8'},
-  {category: '电子产品', price: '$199.99', stocked: true, name: 'MI 8'}
+    {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
+    {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
+    {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
+    {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
+    {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
+    {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}
 ];
-
-export default Test;
+export default Test
