@@ -6,12 +6,13 @@ import Test from './pages/test';//引用test组件 命名为Test
 class App extends Component {
   //组件
   render() {
+    let helloWorld = "欢迎来到召唤师峡谷..."
     return (
       <div className="App">
         <header className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <p>
-            Edit <code>src/App.js</code> and save to reload.
+            {helloWorld}
           </p>
           <a
             className="App-link"
